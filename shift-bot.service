@@ -1,0 +1,14 @@
+[Unit]
+Description=GymBeam Shift Bot
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/shift-bot
+ExecStart=/usr/bin/python3 /opt/shift-bot/shift_bot.py
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/shift-bot/.env
+
+[Install]
+WantedBy=multi-user.target

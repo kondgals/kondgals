@@ -1,0 +1,1 @@
+export default function Dashboard(){return <main className='p-4 space-y-3'><h1 className='text-2xl font-semibold'>Дашборд</h1><div className='grid grid-cols-2 gap-3'>{['Активні списки','Остання сума','Без ціни','Очікують підтвердження'].map(x=><div key={x} className='rounded-2xl bg-white p-4 shadow-sm'>{x}</div>)}</div></main>}

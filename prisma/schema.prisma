@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PriceStatus {
+  exact
+  promo
+  estimated
+  manual
+  unknown
+  outdated
+}
+
+enum SuggestionStatus {
+  pending
+  accepted
+  rejected
+}
+
+model User {
+  id            String                  @id @default(cuid())
+  name          String?
+  email         String                  @unique
+  password      String?
+  locale        String                  @default("uk")
+  currency      String                  @default("EUR")
+  region        String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  shoppingLists ShoppingList[]
+  suggestions   PriceUpdateSuggestion[]
+  notifications Notification[]
+}
+
+model Store {
+  id                  String       @id @default(cuid())
+  name                String
+  country             String       @default("SK")
+  websiteUrl          String?
+  supportsLoyaltyCard Boolean      @default(false)
+  loyaltyCardName     String?
+  createdAt           DateTime     @default(now())
+  priceOffers         PriceOffer[]
+}
+
+model Product {
+  id                 String             @id @default(cuid())
+  canonicalName      String
+  brand              String?
+  category           String
+  defaultUnit        String
+  defaultPackageSize String?
+  imageUrl           String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  aliases            ProductAlias[]
+  offers             PriceOffer[]
+  listItems          ShoppingListItem[]
+}
+
+model ProductAlias {
+  id              String  @id @default(cuid())
+  productId       String
+  alias           String
+  language        String
+  normalizedAlias String
+  product         Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([normalizedAlias])
+}
+
+model PriceOffer {
+  id                  String            @id @default(cuid())
+  productId           String
+  storeId             String?
+  price               Decimal           @db.Decimal(10, 2)
+  loyaltyPrice        Decimal?          @db.Decimal(10, 2)
+  loyaltyCardName     String?
+  currency            String            @default("EUR")
+  unit                String?
+  packageSize         String?
+  pricePerBaseUnit    Decimal?          @db.Decimal(10, 4)
+  status              PriceStatus
+  confidence          Int
+  sourceType          String
+  sourceName          String
+  sourceUrl           String?
+  requiresLoyaltyCard Boolean           @default(false)
+  validFrom           DateTime?
+  validUntil          DateTime?
+  lastCheckedAt       DateTime          @default(now())
+  createdAt           DateTime          @default(now())
+  product             Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store               Store?            @relation(fields: [storeId], references: [id])
+  selectedIn          ShoppingListItem[]
+}
+
+model ShoppingList {
+  id         String             @id @default(cuid())
+  userId     String
+  name       String
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  archivedAt DateTime?
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items      ShoppingListItem[]
+}
+
+model ShoppingListItem {
+  id                  String                  @id @default(cuid())
+  shoppingListId      String
+  productId           String?
+  customName          String?
+  quantity            Decimal                 @db.Decimal(10, 2)
+  unit                String
+  selectedPriceOfferId String?
+  manualPrice         Decimal?                @db.Decimal(10, 2)
+  finalPrice          Decimal?                @db.Decimal(10, 2)
+  priceStatus         PriceStatus             @default(unknown)
+  isPurchased         Boolean                 @default(false)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  shoppingList        ShoppingList            @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+  product             Product?                @relation(fields: [productId], references: [id])
+  selectedPriceOffer  PriceOffer?             @relation(fields: [selectedPriceOfferId], references: [id])
+  suggestions         PriceUpdateSuggestion[]
+}
+
+model PriceUpdateSuggestion {
+  id                 String           @id @default(cuid())
+  userId             String
+  shoppingListItemId String
+  oldPrice           Decimal          @db.Decimal(10, 2)
+  newPrice           Decimal          @db.Decimal(10, 2)
+  newPriceOfferId    String
+  status             SuggestionStatus @default(pending)
+  createdAt          DateTime         @default(now())
+  resolvedAt         DateTime?
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item               ShoppingListItem @relation(fields: [shoppingListItemId], references: [id], onDelete: Cascade)
+}
+
+model PriceLookupLog {
+  id              String     @id @default(cuid())
+  query           String
+  normalizedQuery String
+  resultStatus    PriceStatus
+  sourceChecked   String
+  createdAt       DateTime   @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Page(){return <main className='max-w-3xl mx-auto p-6 space-y-8'><h1 className='text-4xl font-bold'>Smart Basket SK</h1><p>Створюй список покупок і одразу бач орієнтовну суму кошика.</p><div className='flex gap-3'><Link href='/dashboard' className='px-4 py-2 rounded-2xl bg-green-600 text-white'>Створити список</Link><Link href='/dashboard' className='px-4 py-2 rounded-2xl border'>Увійти</Link></div></main>}

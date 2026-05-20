@@ -1,0 +1,6 @@
+import { PrismaClient, PriceStatus } from '@prisma/client';
+const prisma=new PrismaClient();
+const products=[['Картопля 2 кг','овочі та фрукти'],['Молоко 1 л','молочні продукти'],['Яйця 10 шт','молочні продукти'],['Müller Milk chocolate 400 g','солодощі'],['Philadelphia Original 125 g','молочні продукти'],['Масло вершкове 250 г','молочні продукти'],['Олія соняшникова 1 л','побутова хімія'],['Хліб','хліб'],['Куряче філе 1 кг','м’ясо'],['Банани 1 кг','овочі та фрукти'],['Яблука 1 кг','овочі та фрукти'],['Йогурт','молочні продукти'],['Сир твердий','молочні продукти'],['Макарони','крупи'],['Рис','крупи']];
+(async()=>{const store=await prisma.store.upsert({where:{id:'demo-store'},update:{},create:{id:'demo-store',name:'Demo adapter',supportsLoyaltyCard:false}});
+for(const [name,category] of products){const p=await prisma.product.create({data:{canonicalName:name,category,defaultUnit:'шт'}});for(const a of [name,name.toLowerCase()]) await prisma.productAlias.create({data:{productId:p.id,alias:a,language:'uk',normalizedAlias:a.toLowerCase()}});await prisma.priceOffer.create({data:{productId:p.id,storeId:store.id,price:'1.99',currency:'EUR',status:PriceStatus.estimated,confidence:45,sourceType:'demo',sourceName:'Mock adapter'}})}
+})();
